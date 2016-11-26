@@ -1,0 +1,64 @@
+The wikipedia search engine contains 2 modules:
+	1)Index creation module
+		-Creating multiple small index files
+	 	-Sort the small indexs to create a big index file( 1level index file ) and then creating 2-level index and 3-level index 			 which contain offset to previous level index file
+	 	-Create 3 levels of title index file that have mapping from docid to title	
+	2) Query handling module
+		-In this we process query words according to given field and find that words in index file and then compute the term frquency for various documents in which word was presend and after processing the query we found the top 10 docs with highest rank.
+		-Now map top 10 doc id with their title and then print top 10 doc ids and titles	
+
+List of file call for Index creation according to their sequence of calls:
+	Indexp.java
+	Datahandler.java
+	TitleIndexCreation.java
+	Parser.java
+	Map.java 
+	PorterStemmer.jav
+	Indexwrite.java
+	kmerge.java
+	
+List of file call Query handling module:
+	HandleQuery.java
+	Maptitle.java
+
+STRUCTURE of In-Memory Data Structure ie. hash map that holds the index structue of intermediate index files:
+
+<Outer_HashMap>: key: word,value: inner_hashmap
+<Inner_HashMap>:key: document id , value: it is of type Define which has 6 fields
+Define class object has four variables:
+(i) body (INTEGER)
+(ii) category (INTEGER)
+(iii) infobox (INTEGER)
+(iv) title (INTEGER)
+(v) reference (INTEGER)
+(vi) external links (INTEGER)
+
+Flow of control:
+	
+Indexp reads the content of XML File(wiki dump) and SAX Parser passes it to Datahandler.java. Datahandler.java contains the following functions:
+1) startElement: It identifies Open tags in XML file and in that we set corresponding field flag
+2) character: It reads the data enclosed between opentag and closetag
+3) endElement: It identifies Close tags in XML file and in that we unset corresponding field flag so that it can process other fields.
+Thus using the above three functions and some boolean variables, the data enclosed between <title> and </title> and <text></text> is identified page wise. 
+
+Considering only the text which is classified as INFOBOX, CATEGORY, TITLE,BODY,REFERENCE and EXTERNAL LINK character by character. The valid words are then passed to helper functions so as to apply the algorithms and insert into the HASHMAP. string is then passed word by word (SINGLE PARSING)
+
+The DataHandler class then calls TitleIndexCreation.java to make title index and also Parser.java. The helper functions in Parser class performs fhe following actions in order:
+1) Convert to lower case
+2) Trim the String
+3) Check if the string is present in stop_words array
+4) Apply Stemming algorithm
+5) Remove if string length<2
+6) Enter the string into Hashmap
+
+On detection of closing tag of file, the data of MAP data structure is written into the index files after every 5000 pages.
+After this we perform merging over these intermediate files using k-way merge sort to make sort 1-level index and also 2-level and 3-level index which contains offset for previous level index. 	
+
+After this we process the query words and find out docid from index file in that word is present than computed rank of the docs and then extracted top 10 ranked docs for that query and from title index we got mapping of those docs to corresponding titles.
+
+		
+EXTRA FEATURES: 
+1) Single One-Time PARSING of data
+2) Not storing zeros in index file: Only if the word is present in corresponing field of the doc than only its count is stored ie. zero count entries not allowed.
+3) Use k-way mege sort to sort index files otherwise it could be a tedious task.
+4) Used level of index that results in fast response time to query 		
